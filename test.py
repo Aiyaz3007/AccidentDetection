@@ -8,23 +8,32 @@ from os.path import exists
 import warnings
 warnings.filterwarnings("ignore")
 
+
 # classes
 with open(constants.TRAIN_ANNOTATIONS_FILE,"r") as f:
-  classes = [cat["name"] for cat in json.load(f)["categories"]]
-  total_classes = classes.insert(0,"__background__")
-
-
+    data = json.load(f)["categories"]
+    classes = [cat["name"] for cat in data]
+    classes.insert(0,"__background__")
+print(classes)
 # model
 model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 in_features = model.roi_heads.box_predictor.cls_score.in_features
 model.roi_heads.box_predictor = FastRCNNPredictor(in_features, len(classes))
 
 
-device = torch.device(constants.DEVICE) if constants.DEVICE == "cuda" and  torch.cuda.is_available() else torch.device(constants.DEVICE)
-model.to(device)
 
-params = [p for p in model.parameters() if p.requires_grad]
-optimizer = torch.optim.SGD(params, lr=0.001, momentum=0.9, nesterov=True, weight_decay=1e-4)
+device = torch.device(constants.DEVICE) if constants.DEVICE == "cuda" and  torch.cuda.is_available() else torch.device(constants.DEVICE)
+
+state_dict = torch.load(constants.MODEL_PATH, map_location=torch.device('cpu'))
+
+# state_dict = torch.load(constants.MODEL_PATH, map_location=torch.device('cpu'))
+model.load_state_dict(state_dict)
+model.eval()
+# model = model.load_state_dict(torch.load(constants.MODEL_PATH,device))
+# model.to(device)
+
+# params = [p for p in model.parameters() if p.requires_grad]
+# optimizer = torch.optim.SGD(params, lr=0.001, momentum=0.9, nesterov=True, weight_decay=1e-4)
 print("Device:",device)
 
 if constants.INPUTDATATYPE != "":
@@ -47,7 +56,7 @@ if constants.INPUTDATATYPE != "":
             VideoPrediction(model=model,
                             device=device,
                             classes=classes,
-                            videoFolder=constants.FOLDER_OF_VIDEO,
+                            videoFolder=constants.FOLDER_OF_VIDEO[0],
                             outFolder=constants.FOLDER_OF_VIDEO[1])
 else:
     print("\nNo Prediction Happened!")

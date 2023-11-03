@@ -11,21 +11,21 @@ import torchvision
 import warnings
 warnings.filterwarnings("ignore")
 
-from src import CustomDataset,constants,Training,saveLossGraph
+from src import CustomDataset,constants,Training,saveLossGraph,collate_fn
 
 
 
 custom_train_data = CustomDataset(annotationFile=constants.TRAIN_ANNOTATIONS_FILE,root_dir=constants.IMAGES)
 custom_val_data = CustomDataset(annotationFile=constants.VAL_ANNOTATIONS_FILE,root_dir=constants.IMAGES)
 
-train_loader = DataLoader(custom_train_data, batch_size=constants.BATCH_SIZE, shuffle=True, num_workers=4, collate_fn=constants.collate_fn)
-val_loader = DataLoader(custom_val_data, batch_size=constants.BATCH_SIZE, shuffle=False, num_workers=4, collate_fn=constants.collate_fn)
+train_loader = DataLoader(custom_train_data, batch_size=constants.BATCH_SIZE, shuffle=True, num_workers=4, collate_fn=collate_fn)
+val_loader = DataLoader(custom_val_data, batch_size=constants.BATCH_SIZE, shuffle=False, num_workers=4, collate_fn=collate_fn)
 
 
 # classes
 with open(constants.TRAIN_ANNOTATIONS_FILE,"r") as f:
   classes = [cat["name"] for cat in json.load(f)["categories"]]
-  total_classes = classes.insert(0,"__background__")
+  classes.insert(0,"__background__")
 
 
 # model

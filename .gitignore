@@ -5,3 +5,5 @@ env
 test_dataset
 *.mp4
 *.jpg
+*.torch
+test2.py

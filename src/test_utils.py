@@ -4,12 +4,18 @@ import cv2
 from os.path import join,isfile
 import torch
 from src import constants
+from torchvision import transforms
 
 if isColab():
     from tqdm import tqdm_notebook as tqdm
 else:
     from tqdm import tqdm
 
+transform = transforms.Compose([
+    transforms.ToPILImage(),  # Convert to PIL Image
+    transforms.Resize((600, 600)),  # Resize to 600x600
+    transforms.ToTensor()  # Convert to PyTorch tensor
+])
 
 def VideoPrediction(model,device,classes,videoFolder,outFolder):
     os.makedirs(outFolder,exist_ok=True)
@@ -24,42 +30,43 @@ def VideoPrediction(model,device,classes,videoFolder,outFolder):
 
         Bar = tqdm(total=length,desc=fileName)
         # Define the output video file
-        fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(join(outFolder,fileName), fourcc, 20.0, (600,600))
         length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         
         model.eval()
         count = 1
         while True:
-            ret, frame = cap.read()
+            ret, Mainframe = cap.read()
             if not ret:
                 break
             # print(f"{count}/{length}")
-            height, width, channels = frame.shape
-            img = torch.Tensor(cv2.resize(frame,constants.RESIZE_FACTOR)/255).permute(2,0,1)
+            Mainframe = cv2.resize(Mainframe,constants.RESIZE_FACTOR)
+            frame = Mainframe.copy()
+            img = torch.Tensor(Mainframe/255).permute(2,0,1)
 
-            frame = torch.tensor(img*255, dtype=torch.uint8)
+            # frame = torch.tensor(img*255, dtype=torch.uint8)
 
             with torch.no_grad():
                 prediction = model([img.to(device)])
-                pred = prediction[0]
-                boxes = pred["boxes"].cpu().numpy()
-                labels = pred["labels"].cpu()
-                scores = pred["scores"].cpu()
 
-            frame = frame.permute(1,2,0).numpy()
+            # You can access the predictions, which include bounding boxes, labels, and scores
+            boxes = prediction[0]['boxes']
+            labels = prediction[0]['labels']
+            scores = prediction[0]['scores']
+
+
             for bbox,label,score in zip(boxes,labels,scores):
                 if score > constants.CONFIDENCE_THRESHOLD:
-                  xmin,ymin,xmax,ymax = list(map(int,(bbox)))
-                  className = classes[label.item()]
-                  if className == "Accident":
-                    if round(score.item(),2)*100 >= 95:
-                      continue
-                  color1 = (0, 255, 255)
-                  color2 = (10, 0, 255)
-
-                  cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color1, 2)
-                  cv2.putText(frame, f"{className} :{round(score.item(),2)*100}%", (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color2, 2)
+                    xmin,ymin,xmax,ymax = list(map(int,(bbox)))
+                    className = classes[label.item()]
+                    if className == "Accident":
+                        if round(score.item(),2)*100 <= 95:
+                            continue
+                    color1 = (0, 255, 255)
+                    color2 = (10, 0, 255)
+                    cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color1, 2)
+                    cv2.putText(frame, f"{className} :{round(score.item(),2)*100}%", (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color2, 1)
 
             # Write the processed frame to the output video
             out.write(frame)
@@ -82,7 +89,7 @@ def singleVideoPrediction(model,device,classes:str,videoPath:str,outPath:str="")
 
     Bar = tqdm(total=length,desc=videoPath.split("/")[-1])
     # Define the output video file
-    fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(outPath, fourcc, 20.0, constants.RESIZE_FACTOR)
     length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     model.eval()
@@ -97,10 +104,11 @@ def singleVideoPrediction(model,device,classes:str,videoPath:str,outPath:str="")
 
         with torch.no_grad():
             prediction = model([img.to(device)])
-            pred = prediction[0]
-            boxes = pred["boxes"].cpu().numpy()
-            labels = pred["labels"].cpu()
-            scores = pred["scores"].cpu()
+
+        pred = prediction[0]
+        boxes = pred["boxes"].cpu().numpy()
+        labels = pred["labels"].cpu()
+        scores = pred["scores"].cpu()
 
         frame = frame.permute(1,2,0).numpy()
         for bbox,label,score in zip(boxes,labels,scores):
@@ -108,13 +116,13 @@ def singleVideoPrediction(model,device,classes:str,videoPath:str,outPath:str="")
                 xmin,ymin,xmax,ymax = list(map(int,(bbox)))
                 className = classes[label.item()]
                 if className == "Accident":
-                    if round(score.item(),2)*100 >= 95:
+                    if round(score.item(),2)*100 <= 95:
                         continue
                 color1 = (0, 255, 255)
                 color2 = (10, 0, 255)
 
                 cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color1, 2)
-                cv2.putText(frame, f"{className} :{round(score.item(),2)*100}%", (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color2, 2)
+                cv2.putText(frame, f"{className} :{round(score.item(),2)*100}%", (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color2, 1)
 
         # Write the processed frame to the output video
         out.write(frame)
@@ -133,36 +141,33 @@ def singleImagePrediction(model,device,classes:str,imagePath:str,outPath:str="")
     length = 1
     Bar = tqdm(total=length,desc=imagePath.split("/")[-1])
     imageData = cv2.imread(imagePath)
-    img = torch.Tensor(cv2.resize(imageData,constants.RESIZE_FACTOR)/255).permute(2,0,1)
-
-    frame = torch.tensor(img*255, dtype=torch.uint8)
-    model.eval()
+    img = cv2.resize(imageData,constants.RESIZE_FACTOR)
+    frame = img.copy()
+    img = img/255
+    img = torch.as_tensor(img, dtype=torch.float32)
+    img = img.permute(2,0,1)
+    
     with torch.no_grad():
         prediction = model([img.to(device)])
-        pred = prediction[0]
-        boxes = pred["boxes"].cpu().numpy()
-        labels = pred["labels"].cpu()
-        scores = pred["scores"].cpu()
 
-    frame = frame.permute(1,2,0).numpy()
+    # You can access the predictions, which include bounding boxes, labels, and scores
+    boxes = prediction[0]['boxes']
+    labels = prediction[0]['labels']
+    scores = prediction[0]['scores']
+
+
     for bbox,label,score in zip(boxes,labels,scores):
         if score > constants.CONFIDENCE_THRESHOLD:
             xmin,ymin,xmax,ymax = list(map(int,(bbox)))
             className = classes[label.item()]
             if className == "Accident":
-                if round(score.item(),2)*100 >= 50:
+                if round(score.item(),2)*100 <= 95:
                     continue
             color1 = (0, 255, 255)
             color2 = (10, 0, 255)
-
             cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color1, 2)
-            cv2.putText(frame, f"{className} :{round(score.item(),2)*100}%", (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color2, 2)
-
+            cv2.putText(frame, f"{className} :{round(score.item(),2)*100}%", (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color2, 1)
     Bar.update(1)
-    if constants.DEVICE == "cpu":
-        imageOut = frame
-    else:
-        imageOut = frame
     cv2.imwrite(outPath,frame)
     print(f"\nPrediction Saved : {outPath}")
     
