@@ -6,10 +6,11 @@ import torch
 from src import constants
 from torchvision import transforms
 
-if isColab():
-    from tqdm.notebook import tqdm
-else:
-    from tqdm import tqdm
+# if isColab():
+#     from tqdm.notebook import tqdm
+# else:
+#     from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
 transform = transforms.Compose([
     transforms.ToPILImage(),  # Convert to PIL Image
