@@ -89,6 +89,12 @@ class Training():
       self.save_model_per_epoch = save_model_per_epoch
       self.save_loss = save_loss
       self.modelsPath = "models"
+      
+      
+      print(f"Epochs: {self.epochs}")
+      print(f"Save Model: {self.save_loss}")
+      print(f"Save Model Per Epoch: {self.save_loss}")
+      print(f"Models Path: {self.modelsPath}")
 
 
 
