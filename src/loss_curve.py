@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import json
 
 def saveLossGraph(lossJson:str,outPath:str="Loss.jpg"):
-    assert outPath.endswith("*.jpg") or outPath.endswith("*.png"),"Output Image should ends with image extension. (i.e) Loss.jpg, Loss.png"
+    assert outPath.endswith(".jpg") or outPath.endswith(".png"),"Output Image should ends with image extension. (i.e) Loss.jpg, Loss.png"
     with open(lossJson,"r") as f:
         info = json.load(f)
 
