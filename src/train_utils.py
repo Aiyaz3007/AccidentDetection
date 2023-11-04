@@ -9,12 +9,11 @@ from os.path import join
 from src import constants
 
 from .utils import isColab
-# if isColab():
-#   from tqdm import tqdm_notebook as tqdm
-# else:
-#   from tqdm import tqdm
+if isColab():
+  from tqdm.notebook import tqdm
+else:
+  from tqdm import tqdm
   
-from tqdm import tqdm
   
 class CustomDataset():
   def __init__(self,annotationFile:str,root_dir:str):
