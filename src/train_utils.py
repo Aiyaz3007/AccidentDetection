@@ -77,7 +77,7 @@ class Training():
                 model,
                 optimizer,
                 device,
-                save_model:bool=False,
+                save_model:bool=True,
                 save_model_per_epoch:int=5,
                 save_loss:bool=True):
 
