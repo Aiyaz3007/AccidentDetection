@@ -1,4 +1,5 @@
 *.zip
+.kaggle
 dataset
 env
 *.pyc
@@ -7,3 +8,4 @@ test_dataset
 *.jpg
 *.torch
 test2.py
+dataset.py
