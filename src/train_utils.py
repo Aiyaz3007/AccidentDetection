@@ -89,12 +89,15 @@ class Training():
       self.save_model_per_epoch = save_model_per_epoch
       self.save_loss = save_loss
       self.modelsPath = "models"
-      
-      
+  
+      print("---------------------------------------------------")      
+      print("Device:",self.device)
+      print("IsColab:",isColab())
       print(f"Epochs: {self.epochs}")
       print(f"Save Model: {self.save_loss}")
       print(f"Save Model Per Epoch: {self.save_loss}")
       print(f"Models Path: {self.modelsPath}")
+      print("---------------------------------------------------")      
 
 
 
@@ -124,6 +127,7 @@ class Training():
                 total_train_loss_dict.append(train_loss_dict)
 
                 one_epoch_bar.update(1)
+                print("updated")
 
 
             return total_train_loss,total_train_loss_dict

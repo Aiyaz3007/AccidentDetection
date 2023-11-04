@@ -40,7 +40,6 @@ model.to(device)
 
 params = [p for p in model.parameters() if p.requires_grad]
 optimizer = torch.optim.SGD(params, lr=0.001, momentum=0.9, nesterov=True, weight_decay=1e-4)
-print("Device:",device)
 
 Training(traindataloader=train_loader,
          valdataloader=val_loader,
