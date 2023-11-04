@@ -5,5 +5,5 @@ def isColab():
     except ModuleNotFoundError:
         return False
     
-def collate_fn(self,batch):
+def collate_fn(batch):
     return tuple(zip(*batch))
