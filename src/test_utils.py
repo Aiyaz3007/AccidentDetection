@@ -7,7 +7,7 @@ from src import constants
 from torchvision import transforms
 
 if isColab():
-    from tqdm import tqdm_notebook as tqdm
+    from tqdm.notebook import tqdm
 else:
     from tqdm import tqdm
 
