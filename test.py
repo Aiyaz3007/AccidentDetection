@@ -10,11 +10,13 @@ warnings.filterwarnings("ignore")
 
 
 # classes
-with open(constants.TRAIN_ANNOTATIONS_FILE,"r") as f:
-    data = json.load(f)["categories"]
-    classes = [cat["name"] for cat in data]
-    classes.insert(0,"__background__")
-print(classes)
+# with open(constants.TRAIN_ANNOTATIONS_FILE,"r") as f:
+#     data = json.load(f)["categories"]
+#     classes = [cat["name"] for cat in data]
+#     classes.insert(0,"__background__")
+# print(classes)
+
+classes = constants.classes
 # model
 model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 in_features = model.roi_heads.box_predictor.cls_score.in_features
@@ -22,12 +24,13 @@ model.roi_heads.box_predictor = FastRCNNPredictor(in_features, len(classes))
 
 
 
-device = torch.device(constants.DEVICE) if constants.DEVICE == "cuda" and  torch.cuda.is_available() else torch.device(constants.DEVICE)
+device = torch.device(constants.DEVICE)
 
-state_dict = torch.load(constants.MODEL_PATH, map_location=torch.device('cpu'))
+state_dict = torch.load(constants.MODEL_PATH)
 
 # state_dict = torch.load(constants.MODEL_PATH, map_location=torch.device('cpu'))
 model.load_state_dict(state_dict)
+model.to(device)
 model.eval()
 # model = model.load_state_dict(torch.load(constants.MODEL_PATH,device))
 # model.to(device)

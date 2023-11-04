@@ -9,13 +9,21 @@ DEVICE = "cpu" #"cuda","cpu"
 RESIZE_FACTOR = (600,600)
 
 
-INPUTDATATYPE = "videos" #image,video,videos
+INPUTDATATYPE = "video" #image,video,videos
 
 
 
 MODEL_PATH = "models/model_39_loss_0.045951_val_loss_0.155342.torch"
 IMAGE_PATH = [r"image.jpg","output.jpg"]
-VIDEO_PATH = [r"video3.mp4","output.mp4"]
+VIDEO_PATH = [r"/content/AccidentDetection/output/1.mp4","output.mp4"]
 FOLDER_OF_VIDEO = [r"accident_test_videos","output"]
 
 CONFIDENCE_THRESHOLD = 0.6
+
+
+classes = [
+  "__background__",
+  "Accident",
+  "Car",
+  "Bike"
+]
