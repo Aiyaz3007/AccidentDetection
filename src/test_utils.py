@@ -10,7 +10,9 @@ from torchvision import transforms
 #     from tqdm.notebook import tqdm
 # else:
 #     from tqdm import tqdm
-from tqdm.autonotebook import tqdm
+# from tqdm.autonotebook import tqdm
+from tqdm.notebook import tqdm
+
 
 transform = transforms.Compose([
     transforms.ToPILImage(),  # Convert to PIL Image
