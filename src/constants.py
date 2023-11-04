@@ -1,6 +1,6 @@
-TRAIN_ANNOTATIONS_FILE = r"dataset\train.json"
-VAL_ANNOTATIONS_FILE = r"dataset\val.json"
-IMAGES = r"dataset\images"
+TRAIN_ANNOTATIONS_FILE = r"dataset/train.json"
+VAL_ANNOTATIONS_FILE = r"dataset/val.json"
+IMAGES = r"dataset/images"
 
 EPOCHS = 40
 BATCH_SIZE = 8
@@ -13,7 +13,7 @@ INPUTDATATYPE = "videos" #image,video,videos
 
 
 
-MODEL_PATH = "models\model_39_loss_0.045951_val_loss_0.155342.torch"
+MODEL_PATH = "models/model_39_loss_0.045951_val_loss_0.155342.torch"
 IMAGE_PATH = [r"image.jpg","output.jpg"]
 VIDEO_PATH = [r"video3.mp4","output.mp4"]
 FOLDER_OF_VIDEO = [r"accident_test_videos","output"]
