@@ -15,7 +15,7 @@ from .utils import isColab
 #   from tqdm import tqdm
   
 # from tqdm.autonotebook import tqdm
-from tqdm.notebook import tqdm
+from tqdm import tqdm
   
 class CustomDataset():
   def __init__(self,annotationFile:str,root_dir:str):

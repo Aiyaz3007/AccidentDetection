@@ -11,7 +11,7 @@ from torchvision import transforms
 # else:
 #     from tqdm import tqdm
 # from tqdm.autonotebook import tqdm
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 
 transform = transforms.Compose([
