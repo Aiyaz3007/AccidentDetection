@@ -5,16 +5,11 @@ import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 import json
 from os.path import exists
+import os
 import warnings
 warnings.filterwarnings("ignore")
 
 
-# classes
-# with open(constants.TRAIN_ANNOTATIONS_FILE,"r") as f:
-#     data = json.load(f)["categories"]
-#     classes = [cat["name"] for cat in data]
-#     classes.insert(0,"__background__")
-# print(classes)
 
 classes = constants.classes
 # model
@@ -26,18 +21,20 @@ model.roi_heads.box_predictor = FastRCNNPredictor(in_features, len(classes))
 
 device = torch.device(constants.DEVICE)
 
-state_dict = torch.load(constants.MODEL_PATH)
 
-# state_dict = torch.load(constants.MODEL_PATH, map_location=torch.device('cpu'))
-model.load_state_dict(state_dict)
+if constants.DEVICE == "cpu":
+    state_dict = torch.load(constants.MODEL_PATH,map_location=torch.device(device))
+    model.load_state_dict(state_dict)
+else:
+    # cuda 
+    state_dict = torch.load(constants.MODEL_PATH)
+    model.load_state_dict(state_dict)
+    
 model.to(device)
 model.eval()
-# model = model.load_state_dict(torch.load(constants.MODEL_PATH,device))
-# model.to(device)
 
-# params = [p for p in model.parameters() if p.requires_grad]
-# optimizer = torch.optim.SGD(params, lr=0.001, momentum=0.9, nesterov=True, weight_decay=1e-4)
 print("Device:",device)
+os.makedirs("tmp", exist_ok=True)
 
 if constants.INPUTDATATYPE != "":
     if constants.INPUTDATATYPE == "image":

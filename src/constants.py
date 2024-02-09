@@ -9,12 +9,12 @@ DEVICE = "cpu" #"cuda","cpu"
 RESIZE_FACTOR = (600,600)
 
 
-INPUTDATATYPE = "video" #image,video,videos
+INPUTDATATYPE = "image" #image,video,videos
 
 
 
-MODEL_PATH = "models/model_39_loss_0.045951_val_loss_0.155342.torch"
-IMAGE_PATH = [r"image.jpg","output.jpg"]
+MODEL_PATH = r"models/model_39_loss_0.045951_val_loss_0.155342.torch"
+IMAGE_PATH = [r"accident_1.jpg","output.jpg"]
 VIDEO_PATH = [r"/content/AccidentDetection/output/1.mp4","output.mp4"]
 FOLDER_OF_VIDEO = [r"accident_test_videos","output"]
 
