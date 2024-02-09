@@ -1,7 +1,7 @@
 import os
 import threading
 from .telegram_api import send_video
-from .utils import isColab,save_video
+from .utils import isColab,save_video,MyVideoCapture
 import cv2
 from os.path import join,isfile
 import torch
@@ -39,6 +39,19 @@ def VideoPrediction(model,device,classes,videoFolder,outFolder):
         out = cv2.VideoWriter(join(outFolder,fileName), fourcc, 20.0, (600,600))
         length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         
+        def process():
+            frames = cap.get_frames_around_index(index=cap.idx,)
+            file_name = f"video_{cap.idx}.mp4"
+            save_video(frame_list=frames,dst=os.path.join("tmp",file_name))
+            resp = send_video(file_name=file_name)
+
+            if resp == 200:
+                # print("send successfully")
+                pass
+            else:
+                # print("send unsuccessfully!")
+                pass
+        
         model.eval()
         count = 1
         while True:
@@ -66,7 +79,7 @@ def VideoPrediction(model,device,classes,videoFolder,outFolder):
                     xmin,ymin,xmax,ymax = list(map(int,(bbox)))
                     className = classes[label.item()]
                     if className == "Accident":
-                        my_thread = threading.Thread(target=process,args=[cap])
+                        my_thread = threading.Thread(target=process)
                         my_thread.start()
                         if round(score.item(),2)*100 <= 95:
                             continue
@@ -89,17 +102,55 @@ def singleVideoPrediction(model,device,classes:str,videoPath:str,outPath:str="")
     assert isfile(videoPath) and videoPath.endswith("mp4"),"Video is not Supported, Check is that filename is proper, and File Must be mp4 format"
     assert outPath.endswith("mp4"),"Video is not Supported, Check is that filename is proper, and File Must be mp4 format"
     
-    # Load video file
-    cap = cv2.VideoCapture(videoPath)
+    accident_index = []
     
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
+    # Load video file
+    Idlecap = cv2.VideoCapture(videoPath)
+    
+    length = int(Idlecap.get(cv2.CAP_PROP_FRAME_COUNT))
+    del Idlecap
+    
     Bar = tqdm(total=length,desc=videoPath.split("/")[-1])
+    
+    
+    cap = MyVideoCapture(videoPath)
+    
+    
     # Define the output video file
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(outPath, fourcc, 20.0, constants.RESIZE_FACTOR)
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     model.eval()
+    
+    framecount = 1
+    noAccidentFrameCount = 0
+    
+    def process(cap,index):
+        cap = MyVideoCapture(videoPath)
+        start_frame = index[0]
+        end_frame = index[-1]
+        
+        
+        def get_video_frame():
+            frames = cap.get_frames_within_range(start_frame,end_frame)
+            if len(frames) > 1:
+                file_name = f"video_{start_frame}_{end_frame}.mp4"
+                save_video(frame_list=frames,dst=os.path.join("tmp",file_name))
+                resp = send_video(file_name=file_name)
+                if resp == 200:
+                    print("send successfully")
+                    pass
+                else:
+                    print("send unsuccessfully!")
+            else:
+                print("frame list is lesser than 1")
+            
+        my_thread2 = threading.Thread(target=get_video_frame,)
+        my_thread2.start()
+        
+            
+        # del index
+        
+       
 
     while True:
         ret, frame = cap.read()
@@ -118,39 +169,57 @@ def singleVideoPrediction(model,device,classes:str,videoPath:str,outPath:str="")
         scores = pred["scores"].cpu()
 
         frame = frame.permute(1,2,0).numpy()
+        
+        isAccident = False
+        
         for bbox,label,score in zip(boxes,labels,scores):
             if score > constants.CONFIDENCE_THRESHOLD:
                 xmin,ymin,xmax,ymax = list(map(int,(bbox)))
                 className = classes[label.item()]
                 if className == "Accident":
+                    isAccident = True
+                
                     if round(score.item(),2)*100 <= 95:
                         continue
+                else:
+                    isAccident = False
+                        
                 color1 = (0, 255, 255)
                 color2 = (10, 0, 255)
 
                 cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), color1, 2)
                 cv2.putText(frame, f"{className} :{round(score.item(),2)*100}%", (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.4, color2, 1)
+        
+        if isAccident:
+            accident_index.append(framecount)
+            noAccidentFrameCount = 0
+        
+        else:
+            noAccidentFrameCount += 1
+        
+        if noAccidentFrameCount >=10 and len(accident_index) > 1 :
+            tmp_accident_index = accident_index.copy()
+            accident_index.clear()
+            
+            if len(tmp_accident_index) > 1:
+                my_thread = threading.Thread(target=process,args=[cap,tmp_accident_index,])
+                my_thread.start()
+            
+            noAccidentFrameCount = 0
+            
 
+            
         # Write the processed frame to the output video
         out.write(frame)
         Bar.update(1)
+        framecount += 1
     
     # Release video capture and writer objects
     cap.release()
     out.release()
-    
-def process(cap):                
-    frames = cap.get_frames_around_index(index=cap.idx,frame_buffer=25)
-    file_name = f"video_{cap.idx}.mp4"
-    save_video(frame_list=frames,dst=os.path.join("tmp",file_name))
-    resp = send_video(file_name=file_name)
-    
-    if resp == 200:
-        # print("send successfully")
-        pass
-    else:
-        # print("send unsuccessfully!")
-        pass
+
+
+
 
 def singleImagePrediction(model,device,classes:str,imagePath:str,outPath:str=""):
     assert isfile(imagePath) and imagePath.endswith("jpg"),"Video is not Supported, Check is that filename is proper, and File Must be jpg format"
