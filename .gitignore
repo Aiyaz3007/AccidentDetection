@@ -4,7 +4,7 @@ dataset
 env
 *.pyc
 test_dataset
-*.mp4
-*.jpg
+# *.mp4
+# *.jpg
 *.torch
 test2.py
